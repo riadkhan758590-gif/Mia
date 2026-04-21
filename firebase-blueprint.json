@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "PrankLink": {
+      "title": "Prank Link",
+      "description": "A generated prank link record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "clicks": { "type": "number" }
+      },
+      "required": ["id", "createdAt"]
+    },
+    "PrankSettings": {
+      "title": "Prank Settings",
+      "description": "Global settings for the prank behavior",
+      "type": "object",
+      "properties": {
+        "imageUrl": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["imageUrl", "audioUrl"]
+    }
+  },
+  "firestore": {
+    "/links/{linkId}": {
+      "schema": "PrankLink",
+      "description": "Individual generated links"
+    },
+    "/settings/config": {
+      "schema": "PrankSettings",
+      "description": "Global configuration for images and sounds"
+    }
+  }
+}

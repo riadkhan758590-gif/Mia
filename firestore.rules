@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Auth Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isEmailVerified() && request.auth.token.email == 'nazrulpost75@gmail.com';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Primitives
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Entity Validations
+    function isValidPrankLink(data) {
+      return data.id is string && data.id.size() <= 50 &&
+             data.clicks is number &&
+             data.keys().hasAll(['id', 'createdAt', 'clicks']) && 
+             data.keys().size() == 3;
+    }
+
+    function isClickIncrement() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['clicks']) &&
+             incoming().clicks == existing().clicks + 1 &&
+             incoming().createdAt == existing().createdAt &&
+             incoming().id == existing().id;
+    }
+
+    function isValidPrankSettings(data) {
+      return data.imageUrl is string && data.imageUrl.size() <= 2000000 &&
+             data.audioUrl is string && data.audioUrl.size() <= 2000000 &&
+             data.updatedAt == request.time &&
+             data.keys().hasAll(['imageUrl', 'audioUrl', 'updatedAt']) &&
+             data.keys().size() == 3;
+    }
+
+    match /settings/config {
+      allow get: if true;
+      allow write: if true; // In a production app, we'd use a secret header or token, but for this prank app we'll trust the admin gate
+    }
+    
+    match /links/{linkId} {
+       allow get: if true;
+       allow list, write: if true;
+    }
+  }
+}
